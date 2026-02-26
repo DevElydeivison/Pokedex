@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokedex CGS</title>
+    <title>Pokedex</title>
 
     <!-- Normalize CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
@@ -17,23 +16,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;500;700&display=swap" rel="stylesheet">
 
-    <!-- Nosso CSS -->
+    <!-- CSS -->
     <link rel="stylesheet" href="/assets/css/global.css">
     <link rel="stylesheet" href="/assets/css/pokedex.css">
+
+    <!--Acicionando emojis-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
     
     <section class="content">
         <header>
-            <a href="https://carlos-cgs.github.io/CGS/">
-                <img src="./assets/img/home.png" alt="Home">
-            </a>
-            <h1>Pokedex CGS</h1>
+                <img src="./assets/img/logo.png" alt="Logo pokemon">
         </header>
 
         <ol id="pokemonList" class="pokemons">
-            <!-- ..... Pokemons here ..... -->
+            <!-- ..... Pokemons ..... -->
         </ol>
 
         <div class="pagination">
@@ -41,7 +40,7 @@
                 Load More
             </button>
         </div>
-            <!-- ..... Card Pokemons here ..... -->
+            <!-- ..... Card Pokemons ..... -->
     <div id="pokemon-modal" class="modal">
     <div class="modal-content">
         <span class="close-button">&times;</span>
@@ -59,10 +58,26 @@
     </div>
 </div>
 
-    <!-- Nosso JS -->
+    <!-- JS -->
     <script src="/assets/js/pokemon-model.js"></script>
     <script src="/assets/js/poke-api.js"></script>
     <script src="/assets/js/main.js"></script>
-</body>
+    
+  <!--Parte do Footer com so links-->
+    <footer class="pokedex-footer">
+      <div class="footer-container">
+        <a href="https://github.com/DevElyShow/Pokedex" target="_blank" class="footer-btn">
+          <i class="fab fa-github"></i>
+          <span>Código</span>
+        </a>
 
+        <a href="https://www.linkedin.com/in/elydeivisoncesar/" target="_blank" class="footer-btn">
+          <i class="fab fa-linkedin"></i>
+          <span>LinkedIn</span>
+        </a>
+      </div>
+    </footer>
+
+</body>
+</html>
 </html>

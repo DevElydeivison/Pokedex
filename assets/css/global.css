@@ -8,13 +8,27 @@ body {
     overflow-x: hidden;
 }
 
+header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+header img {
+    max-width: 200px;
+    height: auto;
+    display: block;
+}
+
 .content {
     width: 100vw;
     height: 100vh;
     padding: 1rem;
-    background-color: #a7a1a1;
+    background-color: #a3c2a5;
     border: 1px solid;
     border-color: #a7a1a105;
+    padding-bottom: 120px;
 }
 
 @media screen and (min-width: 992px) {
@@ -24,4 +38,47 @@ body {
         margin: 1rem auto;
         border-radius: 1rem;
     }
+}
+
+.pokedex-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(90deg, #4da759, #3cc54e);
+  border-top: 4px solid #000;
+  padding: 12px 0;
+  z-index: 999;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.footer-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+}
+
+.footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: white;
+  background: #2c2c2c;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-family: 'Press Start 2P', cursive; /* estilo game */
+  transition: all 0.3s ease;
+  border: 2px solid #000;
+}
+
+.footer-btn i {
+  font-size: 18px;
+}
+
+.footer-btn:hover {
+  background: #000;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 0 12px rgba(255,255,255,0.3);
 }
