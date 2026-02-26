@@ -23,10 +23,10 @@ API utilizada:
 ## 📸 Demonstração
 
 ### Tela Principal
-![Tela Principal](./img/screen.png)
+![Tela Principal](assets/img/screen.png)
 
 ### Modal de Detalhes
-![Modal Pokémon](./img/screen2.png)
+![Modal Pokémon](assets/img/screen2.png)
 
 ---
 
