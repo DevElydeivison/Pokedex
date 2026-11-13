@@ -5,6 +5,27 @@ document.addEventListener('DOMContentLoaded', () => {
  const $ = id => document.getElementById(id);
  const list = $('pokemonList'), status = $('statusMessage'), more = $('loadMoreButton');
  const selected = []; let all = [], visible = PAGE_SIZE, query = '', filter = 'all', sort = 'number', busy = false;
+ const elemental = {
+  all:['◈','Modo exploração','Explore todos os tipos em uma atmosfera neutra.'],
+  normal:['◎','Essência normal','Energia sutil e pulsos de luz.'],fire:['♨','Atmosfera de fogo','Brasas e calor percorrem o cenário.'],water:['◉','Atmosfera aquática','Bolhas sobem em uma corrente azul.'],electric:['ϟ','Atmosfera elétrica','Faíscas e pulsos energizam o ambiente.'],grass:['❧','Atmosfera natural','Folhas flutuam por uma floresta viva.'],ice:['❄','Atmosfera glacial','Cristais de gelo deslizam pelo ar.'],fighting:['✦','Atmosfera de combate','Ondas de impacto vibram no ambiente.'],poison:['☣','Atmosfera tóxica','Esporos luminosos flutuam lentamente.'],ground:['◈','Atmosfera terrestre','Poeira e areia se movem pelo cenário.'],flying:['➶','Atmosfera aérea','Correntes de vento cruzam a tela.'],psychic:['✧','Atmosfera psíquica','Partículas de energia orbitam suavemente.'],bug:['✳','Atmosfera inseto','Pontos de luz lembram vagalumes.'],rock:['◆','Atmosfera rochosa','Fragmentos minerais flutuam pelo ar.'],ghost:['☾','Atmosfera fantasma','Névoa espectral percorre o ambiente.'],dragon:['♜','Atmosfera dracônica','Energia ancestral pulsa ao fundo.'],dark:['☽','Atmosfera sombria','Sombras e cinzas flutuam discretamente.'],steel:['⬡','Atmosfera metálica','Reflexos de metal atravessam a cena.'],fairy:['✧','Atmosfera encantada','Pequenas estrelas cintilam pelo ar.']
+ };
+ function setAtmosphere(type){
+  const info=elemental[type]||elemental.all;
+  document.body.dataset.element=type;
+  $('elementSymbol').textContent=info[0];$('elementTitle').textContent=info[1];$('elementDescription').textContent=info[2];
+  const particles=$('elementParticles');particles.replaceChildren();
+  if(type==='all')return;
+  for(let i=0;i<22;i++){
+   const dot=document.createElement('span');dot.className='element-particle';
+   dot.style.setProperty('--x',`${(i*43+11)%100}%`);
+   dot.style.setProperty('--delay',`${-((i*7)%19)}s`);
+   dot.style.setProperty('--duration',`${9+(i*3)%14}s`);
+   dot.style.setProperty('--size',`${3+(i*5)%8}px`);
+   dot.style.setProperty('--drift',`${((i*13)%100)-50}px`);
+   particles.appendChild(dot);
+  }
+ }
+
  const escape = str => String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const pretty = str => str.split('-').map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join(' ');
  const typesHtml = p => p.types.map(t => `<span class="type-pill type-${t}">${names[t] || pretty(t)}</span>`).join('');
@@ -25,9 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
  document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
  $('openCompare').addEventListener('click',compare);$('clearCompare').addEventListener('click',()=>{selected.length=0;updateTray();});
  $('searchInput').addEventListener('input',e=>{query=e.target.value.trim().toLowerCase();visible=PAGE_SIZE;render();});
- $('typeFilter').addEventListener('change',e=>{filter=e.target.value;visible=PAGE_SIZE;render();});
+ $('typeFilter').addEventListener('change',e=>{filter=e.target.value;visible=PAGE_SIZE;setAtmosphere(filter);render();});
  $('sortFilter').addEventListener('change',e=>{sort=e.target.value;visible=PAGE_SIZE;render();});
  more.addEventListener('click',()=>{visible+=PAGE_SIZE;render();});
  async function init(){ if(busy)return;busy=true;try {const chunks=[];for(let offset=0;offset<TOTAL;offset+=25){const count=Math.min(25,TOTAL-offset);const batch=await pokeApi.getPokemons(offset,count);chunks.push(...batch);all=chunks;status.textContent=`Carregando Pokémon... ${Math.min(offset+count,TOTAL)}/${TOTAL}`;render();}const types=[...new Set(all.flatMap(p=>p.types))].sort();$('typeFilter').insertAdjacentHTML('beforeend',types.map(t=>`<option value="${t}">${names[t]||pretty(t)}</option>`).join(''));render();if(all.length<TOTAL){status.hidden=false;status.textContent=`${TOTAL-all.length} Pokémon não puderam ser carregados. Atualize a página para tentar novamente.`;}}catch(err){status.hidden=false;status.textContent='Não foi possível carregar a Pokédex. Verifique sua conexão e atualize a página.';console.error(err);}finally{busy=false;}}
- init();
+ setAtmosphere('all');init();
 });
