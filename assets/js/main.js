@@ -1,96 +1,33 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const pokemonList = document.getElementById('pokemonList');
-    const loadMoreButton = document.getElementById('loadMoreButton');
-    const modal = document.getElementById("pokemon-modal");
-
-    const maxRecords = 151;
-    const limit = 76;
-    let offset = 0;
-
-    function convertPokemonToLi(pokemon) {
-        return `
-            <li class="pokemon ${pokemon.type}" data-id="${pokemon.number}">
-                <span class="number">#${pokemon.number}</span>
-                <span class="name">${pokemon.name}</span>
-
-                <div class="detail">
-                    <ol class="types">
-                        ${pokemon.types.map((type) => `<li class="type ${type}">${type}</li>`).join('')}
-                    </ol>
-
-                    <img src="${pokemon.photo}" alt="${pokemon.name}">
-                </div>
-            </li>
-        `;
-    }
-
-    function showPokemonModal(pokemon) {
-        // Seleciona elementos no modal
-        const modal = document.getElementById("pokemon-modal");
-        const nameElement = document.getElementById("pokemon-name");
-        const photoElement = document.getElementById("pokemon-photo");
-        const typeElement = document.getElementById("pokemon-type");
-        const weightElement = document.getElementById("pokemon-weight");
-        const heightElement = document.getElementById("pokemon-height");
-    
-        // Converte altura e peso para metros e quilogramas
-        const heightInMeters = (pokemon.height * 0.3048).toFixed(2);
-        const weightInKg = (pokemon.weight * 0.453592).toFixed(2);
-    
-        // Atualiza o conteúdo do modal com os detalhes do Pokémon
-        nameElement.textContent = pokemon.name;
-        photoElement.src = pokemon.photo;
-        typeElement.textContent = `Tipo: ${pokemon.type}`;
-        weightElement.textContent = `Peso: ${weightInKg} Kg`;
-        heightElement.textContent = `Altura: ${heightInMeters} metros`;
-    
-        // Exibe o modal adicionando a classe .show
-        modal.classList.add("show");
-    }
-    
-    // Fechar o modal ao clicar no botão de fechar
-    document.querySelector(".close-button").addEventListener("click", () => {
-        modal.classList.remove("show");
-    });
-    
-
-    function addPokemonClickEvent() {
-        const pokemonElements = pokemonList.querySelectorAll('li.pokemon');
-
-        pokemonElements.forEach((element) => {
-            element.addEventListener("click", () => {
-                const pokemonId = element.getAttribute("data-id");
-
-                pokeApi.getPokemonDetail({ url: `https://pokeapi.co/api/v2/pokemon/${pokemonId}` })
-                    .then((pokemonDetail) => {
-                        showPokemonModal(pokemonDetail);
-                    });
-            });
-        });
-    }
-
-    function loadPokemonItens(offset, limit) {
-        pokeApi.getPokemons(offset, limit).then((pokemons = []) => {
-            const newHtml = pokemons.map(convertPokemonToLi).join('');
-            pokemonList.innerHTML += newHtml;
-
-            addPokemonClickEvent();
-        });
-    }
-
-    loadPokemonItens(offset, limit);
-
-    loadMoreButton.addEventListener('click', () => {
-        offset += limit;
-        const qtdRecordsWithNextPage = offset + limit;
-
-        if (qtdRecordsWithNextPage >= maxRecords) {
-            const newLimit = maxRecords - offset;
-            loadPokemonItens(offset, newLimit);
-
-            loadMoreButton.parentElement.removeChild(loadMoreButton);
-        } else {
-            loadPokemonItens(offset, limit);
-        }
-    });
+document.addEventListener('DOMContentLoaded', () => {
+ const TOTAL = 151, PAGE_SIZE = 24;
+ const names = {normal:'Normal',fire:'Fogo',water:'Água',electric:'Elétrico',grass:'Planta',ice:'Gelo',fighting:'Lutador',poison:'Venenoso',ground:'Terra',flying:'Voador',psychic:'Psíquico',bug:'Inseto',rock:'Pedra',ghost:'Fantasma',dragon:'Dragão',dark:'Sombrio',steel:'Aço',fairy:'Fada'};
+ const stats = [['hp','HP'],['attack','Ataque'],['defense','Defesa'],['special-attack','Ataque especial'],['special-defense','Defesa especial'],['speed','Velocidade']];
+ const $ = id => document.getElementById(id);
+ const list = $('pokemonList'), status = $('statusMessage'), more = $('loadMoreButton');
+ const selected = []; let all = [], visible = PAGE_SIZE, query = '', filter = 'all', sort = 'number', busy = false;
+ const escape = str => String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const pretty = str => str.split('-').map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join(' ');
+ const typesHtml = p => p.types.map(t => `<span class="type-pill type-${t}">${names[t] || pretty(t)}</span>`).join('');
+ const image = p => `<img src="${escape(p.photo)}" alt="${escape(pretty(p.name))}" loading="lazy" onerror="this.style.opacity='.15'">`;
+ const number = p => `#${String(p.number).padStart(3,'0')}`;
+ const card = p => `<li class="pokemon-card" style="--poke-color:var(--type-${p.type},#94a3b8)"><button class="card-open" data-detail="${p.number}" aria-label="Ver detalhes de ${escape(p.name)}"><div class="card-top"><span class="card-number">${number(p)}</span><span class="card-arrow">↗</span></div><div class="pokemon-art">${image(p)}</div><div class="card-bottom"><h3>${escape(pretty(p.name))}</h3><div class="type-list">${typesHtml(p)}</div></div></button><button class="compare-add ${selected.includes(p.number)?'is-selected':''}" data-select="${p.number}" aria-pressed="${selected.includes(p.number)}">${selected.includes(p.number)?'✓ Selecionado':'+ Comparar'}</button></li>`;
+ function filtered() { let result = all.filter(p => (p.name.includes(query) || String(p.number).includes(query.replace('#',''))) && (filter === 'all' || p.types.includes(filter))); result.sort((a,b) => sort === 'name' ? a.name.localeCompare(b.name) : sort === 'name-desc' ? b.name.localeCompare(a.name) : sort === 'number-desc' ? b.number-a.number : a.number-b.number); return result; }
+ function render() { const data = filtered(); list.innerHTML = data.slice(0,visible).map(card).join(''); status.hidden = data.length > 0; if (!data.length) status.textContent = 'Nenhum Pokémon encontrado. Experimente outra busca.'; $('resultCount').textContent = `${data.length} Pokémon encontrados`; more.hidden = data.length <= visible; more.disabled = false; more.textContent = 'Carregar mais Pokémon ↓'; }
+ function updateTray() { const tray = $('compareTray'); tray.hidden = selected.length === 0; $('compareHint').textContent = `${selected.length} de 2 selecionados`; $('compareSlots').innerHTML = selected.map(id => { const p = all.find(x=>x.number===id);return `<div class="tray-slot">${image(p)}<span>${escape(pretty(p.name))}</span><button data-remove="${id}" aria-label="Remover ${escape(p.name)}">×</button></div>`; }).join('') + Array.from({length:2-selected.length},()=>'<div class="tray-slot empty-slot">+ Escolher Pokémon</div>').join(''); $('openCompare').disabled = selected.length !== 2; render(); }
+ function toggle(id) { const index = selected.indexOf(id); if(index>=0) selected.splice(index,1); else if(selected.length<2) selected.push(id); else { $('compareHint').textContent = 'Remova um Pokémon para escolher outro'; return; } updateTray(); }
+ function statRows(p) {return stats.map(([key,label])=>`<div class="stat-row"><span>${label}</span><div class="stat-track"><div class="stat-fill" style="width:${Math.min(100,(p.stats[key]||0)/180*100)}%"></div></div><b>${p.stats[key]||0}</b></div>`).join('');}
+ function openModal(id) { const p = all.find(x=>x.number===id); if(!p)return; $('detailContent').innerHTML = `<div class="detail-hero" style="--poke-color:var(--type-${p.type})"><span class="detail-number">${number(p)}</span>${image(p)}</div><div class="detail-body"><span class="section-kicker">POKÉMON ${number(p)}</span><h2 id="pokemon-name">${escape(pretty(p.name))}</h2><div class="type-list">${typesHtml(p)}</div><div class="detail-measures"><div><small>ALTURA</small><strong>${p.height.toLocaleString('pt-BR')} m</strong></div><div><small>PESO</small><strong>${p.weight.toLocaleString('pt-BR')} kg</strong></div></div><h3>Atributos base</h3>${statRows(p)}<h3>Habilidades</h3><p class="abilities">${p.abilities.map(pretty).map(escape).join(' · ')}</p><button class="primary-button detail-compare" data-select="${p.number}">${selected.includes(p.number)?'Remover da comparação':'+ Adicionar à comparação'}</button></div>`; show('pokemon-modal'); }
+ function comparisonColumn(p) {return `<div class="versus-pokemon" style="--poke-color:var(--type-${p.type})"><div class="versus-art">${image(p)}</div><small>${number(p)}</small><h3>${escape(pretty(p.name))}</h3><div class="type-list">${typesHtml(p)}</div></div>`;}
+ function compare() { if(selected.length!==2)return; const [a,b] = selected.map(id=>all.find(p=>p.number===id)); const total = p => stats.reduce((sum,[k])=>sum+(p.stats[k]||0),0); $('compareContent').innerHTML = `<div class="compare-heading"><span class="section-kicker">BATALHA DE ATRIBUTOS</span><h2 id="compareTitle">Comparação Pokémon</h2><p>Compare os atributos base dos dois Pokémon.</p></div><div class="versus-head">${comparisonColumn(a)}<span class="versus-label">VS</span>${comparisonColumn(b)}</div><div class="compare-stats">${stats.map(([key,label])=>{const av=a.stats[key]||0,bv=b.stats[key]||0;return `<div class="compare-stat"><div class="compare-value ${av>bv?'winner':''}">${av}</div><div class="compare-center"><span>${label}</span><div class="dual-bars"><div class="left-bar"><i style="width:${Math.min(100,av/180*100)}%"></i></div><div class="right-bar"><i style="width:${Math.min(100,bv/180*100)}%"></i></div></div></div><div class="compare-value ${bv>av?'winner':''}">${bv}</div></div>`}).join('')}<div class="compare-stat total-row"><div class="compare-value ${total(a)>total(b)?'winner':''}">${total(a)}</div><div class="compare-center"><span>TOTAL DE ATRIBUTOS</span></div><div class="compare-value ${total(b)>total(a)?'winner':''}">${total(b)}</div></div><div class="compare-stat"><div class="compare-value">${a.height.toLocaleString('pt-BR')} m</div><div class="compare-center"><span>ALTURA</span></div><div class="compare-value">${b.height.toLocaleString('pt-BR')} m</div></div><div class="compare-stat"><div class="compare-value">${a.weight.toLocaleString('pt-BR')} kg</div><div class="compare-center"><span>PESO</span></div><div class="compare-value">${b.weight.toLocaleString('pt-BR')} kg</div></div></div><p class="compare-disclaimer">Atributos base não determinam sozinhos o vencedor de uma batalha.</p>`;show('compare-modal'); }
+ function show(id){$(id).hidden=false;document.body.classList.add('modal-open');}
+ function close(){document.querySelectorAll('.modal-overlay').forEach(el=>el.hidden=true);document.body.classList.remove('modal-open');}
+ document.addEventListener('click', e=>{const detail=e.target.closest('[data-detail]'),select=e.target.closest('[data-select]'),remove=e.target.closest('[data-remove]');if(detail)openModal(Number(detail.dataset.detail));if(select){toggle(Number(select.dataset.select));if(select.classList.contains('detail-compare'))close();}if(remove)toggle(Number(remove.dataset.remove));if(e.target.matches('[data-close]') || e.target.classList.contains('modal-overlay'))close();});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+ $('openCompare').addEventListener('click',compare);$('clearCompare').addEventListener('click',()=>{selected.length=0;updateTray();});
+ $('searchInput').addEventListener('input',e=>{query=e.target.value.trim().toLowerCase();visible=PAGE_SIZE;render();});
+ $('typeFilter').addEventListener('change',e=>{filter=e.target.value;visible=PAGE_SIZE;render();});
+ $('sortFilter').addEventListener('change',e=>{sort=e.target.value;visible=PAGE_SIZE;render();});
+ more.addEventListener('click',()=>{visible+=PAGE_SIZE;render();});
+ async function init(){ if(busy)return;busy=true;try {const chunks=[];for(let offset=0;offset<TOTAL;offset+=25){const count=Math.min(25,TOTAL-offset);const batch=await pokeApi.getPokemons(offset,count);chunks.push(...batch);all=chunks;status.textContent=`Carregando Pokémon... ${Math.min(offset+count,TOTAL)}/${TOTAL}`;render();}const types=[...new Set(all.flatMap(p=>p.types))].sort();$('typeFilter').insertAdjacentHTML('beforeend',types.map(t=>`<option value="${t}">${names[t]||pretty(t)}</option>`).join(''));render();if(all.length<TOTAL){status.hidden=false;status.textContent=`${TOTAL-all.length} Pokémon não puderam ser carregados. Atualize a página para tentar novamente.`;}}catch(err){status.hidden=false;status.textContent='Não foi possível carregar a Pokédex. Verifique sua conexão e atualize a página.';console.error(err);}finally{busy=false;}}
+ init();
 });
